@@ -4,6 +4,7 @@ import logging
 import sys
 import requests
 
+from dns import rdatatype
 from dnsknife import resolver
 
 logger = logging.getLogger()
@@ -19,6 +20,17 @@ logger.addHandler(handler)
 
 def execute_query(domain):
     ans = resolver.query(domain, 'A')
+
+    # Validating tht rrsig domain is in place
+    rrsig_answer = False
+    for answer in ans.response.answer:
+        if answer.rdtype == rdatatype.RRSIG:
+            rrsig_answer = True
+            break
+    if not rrsig_answer:
+        logger.error("No RRSIG answer found in response")
+        return False
+
     if len(ans) == 0:
         return False
     logger.info("Resolved '{0}' to '{1}'".format(domain, ans[0]))
