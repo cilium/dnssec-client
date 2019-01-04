@@ -20,19 +20,17 @@ logger.addHandler(handler)
 
 def execute_query(domain):
     ans = resolver.query(domain, 'A')
+    if len(ans) == 0:
+        logger.error("No valid answer '{0}'".format(ans))
+        return False
 
-    # Validating tht rrsig domain is in place
-    rrsig_answer = False
-    for answer in ans.response.answer:
-        if answer.rdtype == rdatatype.RRSIG:
-            rrsig_answer = True
-            break
-    if not rrsig_answer:
+    rrsig_answers = len(list(filter(
+        lambda x: x.rdtype == rdatatype.RRSIG,
+        ans.response.answer)))
+    if rrsig_answers == 0:
         logger.error("No RRSIG answer found in response")
         return False
 
-    if len(ans) == 0:
-        return False
     logger.info("Resolved '{0}' to '{1}'".format(domain, ans[0]))
     res = requests.get("http://{0}".format(ans[0]), timeout=5)
     if res.status_code != 200:
