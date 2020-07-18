@@ -1,9 +1,11 @@
-FROM python:3
+FROM python:alpine3.12
 
 WORKDIR /usr/src/app
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apk add g++ && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apk del g++
 
 COPY . .
 
